@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlmodel import SQLModel
+from app.schemas.user import UserRead
 
 
 class BattleRead(SQLModel):

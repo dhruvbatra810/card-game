@@ -7,7 +7,7 @@ from app.models.user import User
 
 ALGORITHM = 'HS256'
 
-def get_current_user(authorization: str = Header(), session: Session = Depends(get_session)):
+def get_current_user(authorization: str = Header(), session: Session = Depends(get_session))->User:
   try:
     token = authorization.replace("Bearer ", "")
     data = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
