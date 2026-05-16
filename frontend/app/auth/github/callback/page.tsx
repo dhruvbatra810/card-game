@@ -7,7 +7,6 @@ export default function Page() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const code = searchParams.get('code')
-
   useEffect(() => {
     if (!code) return
     fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/github/callback?code=${code}`)
@@ -17,6 +16,8 @@ export default function Page() {
           localStorage.setItem('token', data.access_token)
           router.replace('/')
         }
+      }).catch(()=>{
+        router.replace('/')
       })
   }, [code, router])
 
