@@ -1,65 +1,180 @@
-import Image from "next/image";
+import LoginButton from '@/components/login-button'
 
-export default function Home() {
+const DEMO_CARDS = [
+  {
+    id: 1,
+    repo_name: 'you/pixel-pong',
+    stars: 1240,
+    forks: 87,
+    age_years: 2,
+    contributors: 14,
+    activity_score: 90,
+    language: 'TypeScript',
+    rarity: 'epic' as const,
+  },
+  {
+    id: 2,
+    repo_name: 'you/lunar-blog',
+    stars: 412,
+    forks: 31,
+    age_years: 1,
+    contributors: 6,
+    activity_score: 60,
+    language: 'JavaScript',
+    rarity: 'rare' as const,
+  },
+  {
+    id: 3,
+    repo_name: 'you/rust-cli',
+    stars: 142,
+    forks: 8,
+    age_years: 1,
+    contributors: 3,
+    activity_score: 40,
+    language: 'Rust',
+    rarity: 'uncommon' as const,
+  },
+]
+
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="flex-1 flex items-center px-12 lg:px-24 gap-16 min-h-[calc(100vh-56px)]">
+      {/* Left — copy */}
+      <div className="flex flex-col gap-6 max-w-lg">
+        <span className="font-mono text-eyebrow text-text-mute tracking-widest">
+          A CARD BATTLE GAME FOR DEVS
+        </span>
+
+        <h1 className="font-display text-hero font-bold leading-tight text-text">
+          Your repos<br />
+          are <span className="text-lime">trading cards.</span><br />
+          Now go fight.
+        </h1>
+
+        <p className="text-lede text-text-dim max-w-sm">
+          Pull your top GitHub repos into a deck. Compare stats —
+          stars, forks, age, contributors, activity. Best of 5
+          rounds. Any repo can win.
+        </p>
+
+        <div className="flex items-center gap-3">
+          <LoginButton />
+          <button
+            disabled
+            className="px-5 py-3 rounded-cta border border-line text-text-mute font-display text-btn cursor-not-allowed opacity-40"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Play as Guest →
+          </button>
         </div>
-      </main>
+
+        <div className="flex items-center gap-6 mt-2">
+          <span className="flex items-center gap-1.5 font-mono text-chip text-text-mute">
+            <span className="w-1.5 h-1.5 rounded-full bg-lime" />
+            READ-ONLY ACCESS
+          </span>
+          <span className="flex items-center gap-1.5 font-mono text-chip text-text-mute">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan" />
+            ~2 MIN MATCHES
+          </span>
+          <span className="flex items-center gap-1.5 font-mono text-chip text-text-mute">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber" />
+            FREE FOREVER
+          </span>
+        </div>
+      </div>
+
+      {/* Right — stacked cards */}
+      <div className="flex-1 flex items-center justify-center">
+        <DemoCardStack />
+      </div>
+    </main>
+  )
+}
+
+function DemoCardStack() {
+  return (
+    <div className="relative w-56 h-80">
+      {/* Card 3 — back, rotated right, lowest z */}
+      <div className="absolute inset-0 z-10" style={{ transform: 'rotate(12deg) translateX(32px) translateY(8px)' }}>
+        <DemoCard card={DEMO_CARDS[2]} />
+      </div>
+
+      {/* Card 2 — middle, rotated left */}
+      <div className="absolute inset-0 z-20" style={{ transform: 'rotate(-6deg) translateX(-20px) translateY(4px)' }}>
+        <DemoCard card={DEMO_CARDS[1]} />
+      </div>
+
+      {/* Card 1 — front, no rotation, highest z */}
+      <div className="absolute inset-0 z-30">
+        <DemoCard card={DEMO_CARDS[0]} />
+      </div>
     </div>
-  );
+  )
+}
+
+const RARITY_STYLES = {
+  common:    { border: 'border-text-mute',         badge: 'bg-text-mute',         text: 'text-bg' },
+  uncommon:  { border: 'border-line-2',            badge: 'bg-line-2',            text: 'text-text-dim' },
+  rare:      { border: 'border-rarity-rare',       badge: 'bg-rarity-rare',       text: 'text-bg' },
+  epic:      { border: 'border-rarity-epic',       badge: 'bg-rarity-epic',       text: 'text-bg' },
+  legendary: { border: 'border-rarity-legendary',  badge: 'bg-rarity-legendary',  text: 'text-bg' },
+}
+
+const LANGUAGE_MASCOT: Record<string, string> = {
+  Python: '🐍', JavaScript: '⚡', TypeScript: '🛡️', Rust: '🦀',
+  Go: '🚀', Java: '☕', Ruby: '💎', PHP: '🐘', HTML: '📜', CSS: '🎨',
+}
+
+function formatStat(v: number) {
+  return v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toString()
+}
+
+function activityLabel(score: number) {
+  return score >= 70 ? 'High' : score >= 30 ? 'Mid' : 'Low'
+}
+
+type Rarity = keyof typeof RARITY_STYLES
+type DemoCardData = { id: number; repo_name: string; stars: number; forks: number; age_years: number; contributors: number; activity_score: number; language: string; rarity: Rarity }
+
+function DemoCard({ card }: { card: DemoCardData }) {
+  const style = RARITY_STYLES[card.rarity]
+  const mascot = LANGUAGE_MASCOT[card.language] ?? '📦'
+  const [owner, repo] = card.repo_name.split('/')
+  const hp = card.stars + card.forks + Math.round(card.age_years * 10) + card.contributors
+
+  return (
+    <div className={`w-full h-full rounded-card border-2 bg-bg-3 flex flex-col overflow-hidden ${style.border}`}>
+      <div className="px-3 pt-3 pb-1 flex flex-col gap-0.5">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-chip text-text-mute">{owner}/</span>
+          <span className="font-mono text-chip text-lime">HP {formatStat(hp)}</span>
+        </div>
+        <span className="font-mono text-sm font-bold text-text">{repo}</span>
+      </div>
+
+      <div className={`mx-3 mb-2 rounded-badge px-2 py-1 flex items-center gap-1.5 ${style.badge}`}>
+        <span className="text-sm leading-none">{mascot}</span>
+        <span className={`font-mono text-chip font-bold uppercase tracking-wide ${style.text}`}>{card.language}</span>
+      </div>
+
+      <div className="px-3 pb-2 flex flex-col flex-1">
+        {[
+          { label: 'STARS',    value: formatStat(card.stars) },
+          { label: 'FORKS',    value: formatStat(card.forks) },
+          { label: 'AGE',      value: `${card.age_years}y` },
+          { label: 'CONTRIB',  value: formatStat(card.contributors) },
+          { label: 'ACTIVITY', value: activityLabel(card.activity_score) },
+        ].map((stat) => (
+          <div key={stat.label} className="flex items-center justify-between py-1 border-b border-line last:border-0">
+            <span className="font-mono text-chip text-text-mute">{stat.label}</span>
+            <span className="font-mono text-chip text-text font-bold">{stat.value}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className={`mx-3 mb-3 rounded-badge py-1 text-center ${style.badge}`}>
+        <span className={`font-mono text-chip font-bold uppercase tracking-widest ${style.text}`}>{card.rarity}</span>
+      </div>
+    </div>
+  )
 }
