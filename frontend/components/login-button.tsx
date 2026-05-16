@@ -8,7 +8,7 @@ export default function ButtonSection() {
 
   useEffect(()=>{
     setStorage( localStorage.getItem('token'))
-  })
+  },[])
 
   if (storage) {
     return <Link href="/battle"    className="px-5 py-3 rounded-cta bg-lime text-bg font-display font-bold text-btn cursor-pointer hover:brightness-110 transition-all shadow-lime-glow">Battle</Link>
