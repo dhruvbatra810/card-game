@@ -1,8 +1,11 @@
-import LoginButton from '@/components/login-button'
-import DemoCardStack from '@/components/demo-card'
 import ButtonSection from '@/components/login-button'
+import Card, { type CardData } from '@/components/card'
 
-
+const DEMO_CARDS: CardData[] = [
+  { id: 1, repo_name: 'you/pixel-pong',  stars: 1240, forks: 87, age_years: 2, contributors: 14, activity_score: 90, language: 'TypeScript', rarity: 'epic' },
+  { id: 2, repo_name: 'you/lunar-blog',  stars: 412,  forks: 31, age_years: 1, contributors: 6,  activity_score: 60, language: 'JavaScript', rarity: 'rare' },
+  { id: 3, repo_name: 'you/rust-cli',    stars: 142,  forks: 8,  age_years: 1, contributors: 3,  activity_score: 40, language: 'Rust',       rarity: 'uncommon' },
+]
 
 export default function LandingPage() {
   return (
@@ -25,7 +28,7 @@ export default function LandingPage() {
           rounds. Any repo can win.
         </p>
 
-       <ButtonSection/>
+        <ButtonSection />
 
         <div className="flex items-center gap-6 mt-2">
           <span className="flex items-center gap-1.5 font-mono text-chip text-text-mute">
@@ -45,7 +48,17 @@ export default function LandingPage() {
 
       {/* Right — stacked cards */}
       <div className="flex-1 flex items-center justify-center">
-        <DemoCardStack />
+        <div className="relative w-56 h-80">
+          <div className="absolute inset-0 z-10" style={{ transform: 'rotate(22deg) translateX(48px) translateY(12px)' }}>
+            <Card card={DEMO_CARDS[2]} />
+          </div>
+          <div className="absolute inset-0 z-20" style={{ transform: 'rotate(-12deg) translateX(-32px) translateY(6px)' }}>
+            <Card card={DEMO_CARDS[1]} />
+          </div>
+          <div className="absolute inset-0 z-30">
+            <Card card={DEMO_CARDS[0]} />
+          </div>
+        </div>
       </div>
     </main>
   )

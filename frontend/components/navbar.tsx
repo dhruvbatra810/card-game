@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 const NAV_LINKS = [
   { label: 'Deck', href: '/dashboard' },
@@ -16,19 +17,14 @@ export default function Navbar() {
   const [user, setUser] = useState<{ xp: number; coins: number; username: string } | null>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) return
-    fetch('http://localhost:8000/users/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`, { credentials: 'include' })
       .then((r) => {
         if (!r.ok) return null
         return r.json()
       })
       .then((data) => { if (data) setUser(data) })
-      .catch((err) => { console.log(err) })
+      .catch(() => { toast.error('Failed to load user') })
   }, [])
-  console.log('user',user)
   return (
     <nav className="z-50 bg-bg-2 border-b border-line h-14 flex items-center px-6">
       {/* Logo */}

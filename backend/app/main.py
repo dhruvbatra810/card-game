@@ -1,11 +1,9 @@
 from fastapi import FastAPI
-from fastapi.security import HTTPBearer
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.main import router
 from app.config import settings
 
-security = HTTPBearer()
-app = FastAPI(swagger_ui_parameters={"persistAuthorization": True})
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,

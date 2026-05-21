@@ -7,7 +7,8 @@ export default function ButtonSection() {
   const [storage,setStorage] = useState<string|null>(null)
 
   useEffect(()=>{
-    setStorage( localStorage.getItem('token'))
+    const token = document.cookie.split('; ').find(r => r.startsWith('token='))?.split('=')[1] ?? null
+    setStorage(token)
   },[])
 
   if (storage) {
@@ -26,7 +27,7 @@ export default function ButtonSection() {
 
 function LoginButton() {
   async function handleLogin() {
-    const res = await fetch('http://localhost:8000/auth/github')
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/github`)
     const data = await res.json()
     window.location.href = data.url
   }

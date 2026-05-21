@@ -13,7 +13,7 @@ export default function Page() {
       .then((r) => r.json())
       .then((data) => {
         if (data.access_token) {
-          localStorage.setItem('token', data.access_token)
+          document.cookie = `token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
           router.replace('/')
         }
       }).catch(()=>{

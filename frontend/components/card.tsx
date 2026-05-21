@@ -1,6 +1,6 @@
-type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 
-type CardData = {
+export type CardData = {
   id: number
   repo_name: string
   stars: number
@@ -12,12 +12,12 @@ type CardData = {
   rarity: Rarity
 }
 
-const RARITY_STYLES: Record<Rarity, { border: string; badge: string; text: string }> = {
-  common:    { border: 'border-rarity-common',    badge: 'bg-rarity-common',    text: 'text-text-mute' },
-  uncommon:  { border: 'border-line-2',           badge: 'bg-line-2',           text: 'text-text-dim' },
-  rare:      { border: 'border-rarity-rare',      badge: 'bg-rarity-rare',      text: 'text-bg' },
-  epic:      { border: 'border-rarity-epic',      badge: 'bg-rarity-epic',      text: 'text-bg' },
-  legendary: { border: 'border-rarity-legendary', badge: 'bg-rarity-legendary', text: 'text-bg' },
+const RARITY_STYLES: Record<Rarity, { border: string; badge: string; text: string; glow: string; tint: string }> = {
+  common:    { border: 'border-text-mute',        badge: 'bg-text-mute',        text: 'text-bg',       glow: '',                                      tint: '' },
+  uncommon:  { border: 'border-line-2',           badge: 'bg-line-2',           text: 'text-text-dim', glow: '',                                      tint: '' },
+  rare:      { border: 'border-rarity-rare',      badge: 'bg-rarity-rare',      text: 'text-bg',       glow: '0 0 12px 2px rgba(91,227,208,0.35)',    tint: 'rgba(91,227,208,0.05)' },
+  epic:      { border: 'border-rarity-epic',      badge: 'bg-rarity-epic',      text: 'text-bg',       glow: '0 0 12px 2px rgba(180,140,255,0.4)',    tint: 'rgba(180,140,255,0.07)' },
+  legendary: { border: 'border-rarity-legendary', badge: 'bg-rarity-legendary', text: 'text-bg',       glow: '0 0 16px 4px rgba(255,181,71,0.45)',    tint: 'rgba(255,181,71,0.07)' },
 }
 
 const LANGUAGE_MASCOT: Record<string, string> = {
@@ -67,9 +67,12 @@ export default function Card({ card, selected = false, onClick }: CardProps) {
   return (
     <button
       onClick={onClick}
+      style={selected ? undefined : {
+        ...(style.glow ? { boxShadow: style.glow } : {}),
+        ...(style.tint ? { background: `linear-gradient(160deg, ${style.tint}, transparent 60%), var(--color-bg-3)` } : {}),
+      }}
       className={`relative w-48 rounded-card border-2 bg-bg-3 flex flex-col overflow-hidden transition-all duration-200 text-left
-        ${style.border}
-        ${selected ? 'shadow-lime-halo scale-105' : 'hover:scale-102 hover:shadow-lime-halo'}
+        ${selected ? 'border-lime shadow-lime-halo scale-105' : `${style.border} hover:scale-102 hover:shadow-lime-halo`}
         ${onClick ? 'cursor-pointer' : 'cursor-default'}
       `}
     >
