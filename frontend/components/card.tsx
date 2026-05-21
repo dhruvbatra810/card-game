@@ -61,7 +61,9 @@ export default function Card({ card, selected = false, onClick }: CardProps) {
   const rarity = (card.rarity as Rarity) ?? 'common'
   const style = RARITY_STYLES[rarity] ?? RARITY_STYLES.common
   const mascot = card.language ? (LANGUAGE_MASCOT[card.language] ?? '📦') : '📦'
-  const [owner, repo] = card.repo_name.split('/')
+  const parts = card.repo_name?.split('/') ?? []
+  const owner = parts[0] ?? 'unknown'
+  const repo = parts[1] ?? parts[0] ?? 'unknown'
   const hp = card.stars + card.forks + Math.round(card.age_years * 10) + card.contributors
 
   return (
