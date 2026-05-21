@@ -15,16 +15,30 @@ cards_router = APIRouter()
 def sync_cards(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     headers = {"Authorization": f"Bearer {user.github_access_token}"}
 
-    repos = httpx.get(
-        "https://api.github.com/user/repos",
-        headers=headers,
-        params={"per_page": 100},
-    ).json()
+    try:
+        res = httpx.get(
+            "https://api.github.com/user/repos",
+            headers=headers,
+            params={"per_page": 100},
+            timeout=10,
+        )
+        res.raise_for_status()
+        repos = res.json()
+    except (httpx.HTTPError, httpx.TimeoutException) as e:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch repos from GitHub: {e}")
 
-    details = [
-        httpx.get(f"https://api.github.com/repos/{repo['full_name']}", headers=headers).json()
-        for repo in repos
-    ]
+    details = []
+    for repo in repos:
+        try:
+            r = httpx.get(
+                f"https://api.github.com/repos/{repo['full_name']}",
+                headers=headers,
+                timeout=10,
+            )
+            r.raise_for_status()
+            details.append(r.json())
+        except (httpx.HTTPError, httpx.TimeoutException):
+            continue
 
     existing = {
         c.repo_name: c
@@ -33,6 +47,8 @@ def sync_cards(user: User = Depends(get_current_user), session: Session = Depend
 
     now = datetime.utcnow()
     for repo_data in details:
+        if not repo_data.get("full_name") or not repo_data.get("created_at") or not repo_data.get("pushed_at"):
+            continue
         created_at = datetime.strptime(repo_data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
         last_pushed = datetime.strptime(repo_data["pushed_at"], "%Y-%m-%dT%H:%M:%SZ")
 
