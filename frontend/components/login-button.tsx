@@ -7,7 +7,9 @@ export default function ButtonSection() {
   const [storage,setStorage] = useState<string|null>(null)
 
   useEffect(()=>{
-    setStorage( localStorage.getItem('token'))
+    const match = document.cookie.match(/(?:^|; )token=([^;]*)/)
+    const token = match ? match[1] : null
+    setStorage(token)
   },[])
 
   if (storage) {
@@ -26,9 +28,16 @@ export default function ButtonSection() {
 
 function LoginButton() {
   async function handleLogin() {
-    const res = await fetch('http://localhost:8000/auth/github')
-    const data = await res.json()
-    window.location.href = data.url
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/github`)
+      if (!res.ok) throw new Error(res.statusText)
+      const data = await res.json()
+      if (!data?.url) throw new Error('No redirect URL returned.')
+      window.location.href = data.url
+    } catch (err) {
+      console.error('GitHub login failed:', err)
+      alert('Login failed. Please try again.')
+    }
   }
 
   return (
