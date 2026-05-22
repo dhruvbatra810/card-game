@@ -28,7 +28,18 @@ export default function BattleQueue({ selected, onRemove }: BattleQueueProps) {
     setStarting(true)
     try {
       const res = await fetch(`${API}/battles`, { method: 'POST', credentials: 'include' })
+      if (!res.ok) {
+        const body = await res.text()
+        console.error(`Failed to start battle (${res.status}):`, body)
+        setStarting(false)
+        return
+      }
       const battle = await res.json()
+      if (!battle || !battle.id) {
+        console.error('Invalid battle response: missing id', battle)
+        setStarting(false)
+        return
+      }
       const cardIds = selected.map((c) => c.id).join(',')
       router.push(`/battle/${battle.id}?cards=${cardIds}`)
     } catch (err) {

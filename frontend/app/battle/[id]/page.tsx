@@ -86,16 +86,29 @@ export default function BattlePage() {
   // Load player's cards and initial battle state on mount
   useEffect(() => {
     async function load() {
-      const [cardsRes, battleRes] = await Promise.all([
-        fetch(`${API}/cards`, { credentials: 'include' }),
-        fetch(`${API}/battles/${battleId}`, { credentials: 'include' }),
-      ])
-      const allCards: CardData[] = await cardsRes.json()
-      const battleData: BattleState = await battleRes.json()
-
-      const filtered = allCards.filter((c) => selectedIds.includes(c.id))
-      setMyCards(filtered)
-      setBattle(battleData)
+      try {
+        const [cardsRes, battleRes] = await Promise.all([
+          fetch(`${API}/cards`, { credentials: 'include' }),
+          fetch(`${API}/battles/${battleId}`, { credentials: 'include' }),
+        ])
+        if (!cardsRes.ok) {
+          const body = await cardsRes.text()
+          console.error(`Failed to load cards (${cardsRes.status}):`, body)
+          return
+        }
+        if (!battleRes.ok) {
+          const body = await battleRes.text()
+          console.error(`Failed to load battle (${battleRes.status}):`, body)
+          return
+        }
+        const allCards: CardData[] = await cardsRes.json()
+        const battleData: BattleState = await battleRes.json()
+        const filtered = allCards.filter((c) => selectedIds.includes(c.id))
+        setMyCards(filtered)
+        setBattle(battleData)
+      } catch (err) {
+        console.error('Failed to load battle data:', err)
+      }
     }
     load()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,6 +134,12 @@ export default function BattlePage() {
 
     // Fetch the bot's card to display it
     const botCardRes = await fetch(`${API}/cards/${round.p2_card_id}/public`, { credentials: 'include' })
+    if (!botCardRes.ok) {
+      const body = await botCardRes.text()
+      console.error(`Failed to fetch bot card (${botCardRes.status}):`, body)
+      setPhase('result')
+      return
+    }
     const botCardData: CardData = await botCardRes.json()
 
     // Update scores via refs (always current, no stale closure issue)
@@ -402,7 +421,7 @@ export default function BattlePage() {
               const isActive = activeCard?.id === card.id
               const parts = card.repo_name?.split('/') ?? []
               const repo = parts[1] ?? parts[0] ?? 'unknown'
-              const hp = card.stars + card.forks + Math.round(card.age_years * 10) + card.contributors
+              const hp = (card.stars ?? 0) + (card.forks ?? 0) + Math.round((card.age_years ?? 0) * 10) + (card.contributors ?? 0)
 
               return (
                 <button
