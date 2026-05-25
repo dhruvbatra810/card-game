@@ -43,34 +43,35 @@ export default async function ProfilePage() {
   let battles: BattleData[] = []
 
   if (token) {
-    try {
-      const res = await fetch(`${apiBase}/users/me`, {
-        headers: { Cookie: `token=${token}` },
-        cache: 'no-store',
-      })
-      if (res.ok) user = await res.json()
-    } catch (err) {
-      console.error(`[profile] Failed to fetch user from ${apiBase}/users/me:`, err)
+    const headers = { Cookie: `token=${token}` }
+    const opts = { headers, cache: 'no-store' as const }
+
+    const userPromise = fetch(`${apiBase}/users/me`, opts)
+    const cardsPromise = fetch(`${apiBase}/cards`, opts)
+    const battlesPromise = fetch(`${apiBase}/battles`, opts)
+
+    const [userResult, cardsResult, battlesResult] = await Promise.allSettled([
+      userPromise,
+      cardsPromise,
+      battlesPromise,
+    ])
+
+    if (userResult.status === 'fulfilled') {
+      if (userResult.value.ok) user = await userResult.value.json()
+    } else {
+      console.error(`[profile] Failed to fetch user from ${apiBase}/users/me:`, userResult.reason)
     }
 
-    try {
-      const res = await fetch(`${apiBase}/cards`, {
-        headers: { Cookie: `token=${token}` },
-        cache: 'no-store',
-      })
-      if (res.ok) cards = await res.json()
-    } catch (err) {
-      console.error(`[profile] Failed to fetch cards from ${apiBase}/cards:`, err)
+    if (cardsResult.status === 'fulfilled') {
+      if (cardsResult.value.ok) cards = await cardsResult.value.json()
+    } else {
+      console.error(`[profile] Failed to fetch cards from ${apiBase}/cards:`, cardsResult.reason)
     }
 
-    try {
-      const res = await fetch(`${apiBase}/battles`, {
-        headers: { Cookie: `token=${token}` },
-        cache: 'no-store',
-      })
-      if (res.ok) battles = await res.json()
-    } catch (err) {
-      console.error(`[profile] Failed to fetch battles from ${apiBase}/battles:`, err)
+    if (battlesResult.status === 'fulfilled') {
+      if (battlesResult.value.ok) battles = await battlesResult.value.json()
+    } else {
+      console.error(`[profile] Failed to fetch battles from ${apiBase}/battles:`, battlesResult.reason)
     }
   }
 
