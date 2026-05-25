@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export default function Page() {
+function CallbackHandler() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const code = searchParams.get('code')
@@ -24,7 +24,7 @@ export default function Page() {
       })
       .then((data) => {
         if (data.access_token) {
-          document.cookie = `token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax; Secure`
+          document.cookie = `token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=None; Secure`
           router.replace('/')
         } else {
           setError('Login failed: no token received.')
@@ -48,5 +48,17 @@ export default function Page() {
     <div className="flex items-center justify-center min-h-screen font-mono text-text-mute">
       Logging in...
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen font-mono text-text-mute">
+        Logging in...
+      </div>
+    }>
+      <CallbackHandler />
+    </Suspense>
   )
 }
