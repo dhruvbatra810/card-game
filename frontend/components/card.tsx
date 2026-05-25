@@ -40,12 +40,14 @@ const LANGUAGE_MASCOT: Record<string, string> = {
   Shell:      '🐚',
 }
 
-function formatStat(value: number): string {
+function formatStat(value: number | null | undefined): string {
+  if (value == null) return '–'
   if (value >= 1000) return `${(value / 1000).toFixed(1)}k`
   return value.toString()
 }
 
-function activityLabel(score: number): string {
+function activityLabel(score: number | null | undefined): string {
+  if (score == null) return '–'
   if (score >= 70) return 'High'
   if (score >= 30) return 'Mid'
   return 'Low'
@@ -64,7 +66,7 @@ export default function Card({ card, selected = false, onClick }: CardProps) {
   const parts = card.repo_name?.split('/') ?? []
   const owner = parts[0] ?? 'unknown'
   const repo = parts[1] ?? parts[0] ?? 'unknown'
-  const hp = card.stars + card.forks + Math.round(card.age_years * 10) + card.contributors
+  const hp = (card.stars ?? 0) + (card.forks ?? 0) + Math.round((card.age_years ?? 0) * 10) + (card.contributors ?? 0)
 
   return (
     <button

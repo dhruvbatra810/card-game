@@ -72,6 +72,14 @@ def get_cards(user: User = Depends(get_current_user), session: Session = Depends
     return session.exec(select(Card).where(Card.user_id == user.id)).all()
 
 
+@cards_router.get('/cards/{card_id}/public', response_model=CardRead)
+def get_card_public(card_id: int, session: Session = Depends(get_session), _: User = Depends(get_current_user)):
+    card = session.get(Card, card_id)
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    return card
+
+
 @cards_router.delete('/cards/{card_id}')
 def delete_card(card_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     card = session.get(Card, card_id)

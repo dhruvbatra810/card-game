@@ -7,6 +7,7 @@ from app.models.battle import Battle
 from app.models.round import Round
 from app.models.card import Card
 from sqlmodel import Session, select
+from datetime import datetime, timezone
 import random
 
 battle_router = APIRouter()
@@ -49,13 +50,22 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
     if not p1_card or p1_card.user_id != user.id:
         raise HTTPException(status_code=404, detail="Card not found")
 
-    # get cards already used by bot in this battle
+    # get cards already used in this battle
     used_rounds = session.exec(select(Round).where(Round.battle_id == id)).all()
+    used_p1_ids = [r.p1_card_id for r in used_rounds]
     used_p2_ids = [r.p2_card_id for r in used_rounds]
 
+    # reject if player tries to reuse a card
+    if body.p1_card_id in used_p1_ids:
+        raise HTTPException(status_code=400, detail="Card already used in this battle")
+
     # pick a random bot card that hasn't been used yet
-    bot_cards = session.exec(select(Card).where(Card.user_id != user.id)).all()
-    available = [c for c in bot_cards if c.id not in used_p2_ids]
+    # use any card in the DB except the one the player just played and already-used bot cards
+    all_cards = session.exec(select(Card)).all()
+    available = []
+    for c in all_cards:
+        if c.id not in used_p2_ids and c.id != body.p1_card_id:
+            available.append(c)
     if not available:
         raise HTTPException(status_code=400, detail="No bot cards available")
     p2_card = random.choice(available)
@@ -94,6 +104,32 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
         points_awarded=points,
     )
     session.add(round_obj)
+
+    # check if battle is now finished: first to 3 points, or all 5 rounds played
+    is_last_round = (round_count + 1) >= 5
+    battle_over = battle.score_player >= 3 or battle.score_opponent >= 3 or is_last_round
+
+    if battle_over:
+        battle.status = "finished"
+        battle.finished_at = datetime.now(timezone.utc)
+
+        player_won = battle.score_player > battle.score_opponent
+
+        if player_won:
+            battle.winner_id = user.id
+            user.wins += 1
+            user.current_streak += 1
+            if user.current_streak > user.best_streak:
+                user.best_streak = user.current_streak
+            # 100 xp for a win, +50 bonus for a critical-hit-heavy game
+            user.xp += 100
+            user.coins += 50
+        else:
+            user.losses += 1
+            user.current_streak = 0
+            # 25 xp consolation for a loss
+            user.xp += 25
+
     session.commit()
     session.refresh(round_obj)
     return round_obj

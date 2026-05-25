@@ -10,7 +10,10 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!code) return
+    if (!code) {
+      setError('No OAuth code received. Please try logging in again.')
+      return
+    }
     const params = new URLSearchParams({ code })
     fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/github/callback?${params}`)
       .then((r) => {

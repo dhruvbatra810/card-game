@@ -1,7 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { CardData } from './card-grid'
+
+const API = process.env.NEXT_PUBLIC_API_BASE_URL
 
 type BattleQueueProps = {
   selected: CardData[]
@@ -18,15 +21,35 @@ const RARITY_COLOR: Record<string, string> = {
 
 export default function BattleQueue({ selected, onRemove }: BattleQueueProps) {
   const router = useRouter()
+  const [starting, setStarting] = useState(false)
   const canStart = selected.length === 5
 
-  function handleStartBattle() {
-    // API wiring comes later — navigate to battle for now
-    router.push('/battle')
+  async function handleStartBattle() {
+    setStarting(true)
+    try {
+      const res = await fetch(`${API}/battles`, { method: 'POST', credentials: 'include' })
+      if (!res.ok) {
+        const body = await res.text()
+        console.error(`Failed to start battle (${res.status}):`, body)
+        setStarting(false)
+        return
+      }
+      const battle = await res.json()
+      if (!battle || !battle.id) {
+        console.error('Invalid battle response: missing id', battle)
+        setStarting(false)
+        return
+      }
+      const cardIds = selected.map((c) => c.id).join(',')
+      router.push(`/battle/${battle.id}?cards=${cardIds}`)
+    } catch (err) {
+      console.error('Failed to start battle:', err)
+      setStarting(false)
+    }
   }
 
   return (
-    <div className="w-72 flex-shrink-0 flex flex-col gap-4">
+    <div className="w-72 shrink-0 flex flex-col gap-4">
       {/* Header */}
       <div>
         <span className="font-mono text-chip text-text-mute uppercase tracking-widest">Battle Queue</span>
@@ -55,7 +78,7 @@ export default function BattleQueue({ selected, onRemove }: BattleQueueProps) {
           const hp = card.stars + card.forks + Math.round(card.age_years * 10) + card.contributors
           return (
             <div key={card.id} className="flex items-center gap-2 bg-bg-3 border border-line rounded-panel px-3 py-2">
-              <span className={`w-2 h-full min-h-[32px] rounded-full ${RARITY_COLOR[card.rarity] ?? 'bg-text-mute'}`} />
+              <span className={`w-2 h-full min-h-8 rounded-full ${RARITY_COLOR[card.rarity] ?? 'bg-text-mute'}`} />
               <div className="flex-1 min-w-0">
                 <p className="font-mono text-chip font-bold text-text truncate">{repo}</p>
                 <p className="font-mono text-[10px] text-text-mute uppercase">
@@ -89,14 +112,14 @@ export default function BattleQueue({ selected, onRemove }: BattleQueueProps) {
       {/* Start battle */}
       <button
         onClick={handleStartBattle}
-        disabled={!canStart}
+        disabled={!canStart || starting}
         className={`w-full py-4 rounded-cta font-display font-bold text-btn-lg transition-all ${
-          canStart
+          canStart && !starting
             ? 'bg-lime text-bg hover:brightness-110 shadow-lime-glow cursor-pointer'
             : 'bg-bg-3 border border-line text-text-mute cursor-not-allowed opacity-50'
         }`}
       >
-        {canStart ? 'Start Battle →' : `Pick ${5 - selected.length} more card${5 - selected.length !== 1 ? 's' : ''}`}
+        {starting ? 'Starting...' : canStart ? 'Start Battle →' : `Pick ${5 - selected.length} more card${5 - selected.length !== 1 ? 's' : ''}`}
       </button>
     </div>
   )

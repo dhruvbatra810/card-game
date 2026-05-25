@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlmodel import SQLModel
 
 
@@ -12,3 +13,4 @@ class UserRead(SQLModel):
     current_streak: int
     xp: int
     coins: int
+    created_at: datetime

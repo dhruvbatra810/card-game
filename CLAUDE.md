@@ -28,7 +28,9 @@ for repo in repos:
 
 ## What this project is
 
-Repo Trumps — a card battle game where GitHub repositories become trading cards. Players sync their GitHub repos, which become cards with stats (stars, forks, age, contributors, activity score). Cards battle each other in a Top Trumps style: pick a stat, compare, highest wins. Currently at MVP (Phase 1).
+See [plan.md](plan.md) for project overview and roadmap.  
+See [backend/backend.md](backend/backend.md) for all API routes.  
+See [frontend/frontend.md](frontend/frontend.md) for all frontend routes and components.
 
 ## Running the project
 
@@ -78,69 +80,18 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 API_BASE_URL=http://localhost:8000
 ```
 
-## Architecture
+## Keeping docs in sync
 
-### Auth flow
-1. Frontend calls `GET /auth/github` → backend returns GitHub OAuth URL
-2. User is redirected to GitHub, then back to `GET /auth/github/callback?code=...`
-3. Backend exchanges code for a GitHub token, creates or updates the User row, issues a JWT
-4. JWT is stored as a cookie (`token=...`) on the frontend
-5. All protected API calls send `credentials: 'include'` so the cookie is forwarded
-6. `get_current_user` in `backend/app/core/deps.py` validates the JWT on every protected route
+Always read [plan.md](plan.md) at the start of every conversation to load project context.
 
-### Card sync flow
-`POST /cards/sync` → fetch user's repos from GitHub API → for each repo fetch detail → compute stats → upsert into Card table
+- After any change to a backend route (add, remove, modify) — update [backend/backend.md](backend/backend.md).
+- After any change to a frontend page or component (add, remove, modify) — update [frontend/frontend.md](frontend/frontend.md).
+- After any change to the project plan or roadmap (features added, phase completed, scope changed) — update [plan.md](plan.md).
 
-Rarity is assigned based on computed stats (stars, forks, age, contributors, activity).
-
-### Battle flow
-`POST /battles` creates a Battle row. `POST /battles/{id}/round` accepts `p1_card_id` + `stat_chosen`, bot picks a random card and stat, highest stat wins. Critical hit triggers when win margin ≥ 10× (awards 2 points). First to 3 wins the battle.
-
-### Backend layout
-```
-backend/app/
-  main.py          — FastAPI app, CORS middleware
-  config.py        — env var settings (pydantic)
-  core/
-    deps.py        — JWT auth dependency (get_current_user)
-    jwt.py         — token creation/validation
-  db/session.py    — engine + get_session dependency
-  models/          — SQLModel table classes (User, Card, Battle, Round, Language)
-  schemas/         — Pydantic response shapes (CardRead, BattleRead, etc.)
-  routes/          — one file per resource (auth, users, cards, battle)
-```
-
-### Frontend layout
-```
-frontend/
-  app/
-    layout.tsx              — root layout: Navbar, footer
-    page.tsx                — landing page (demo cards + login button)
-    dashboard/page.tsx      — server component: fetches /cards, passes to client
-    auth/github/callback/   — handles OAuth redirect, sets token cookie
-  components/
-    card.tsx                — the core card UI (stats, rarity glow, language mascot)
-    login-button.tsx        — checks token cookie, shows Login or Battle button
-    dashboard/              — deck grid, battle queue sidebar, deck header
-  lib/utils.ts              — Tailwind cn() helper
-```
-
-### Key conventions
-
-**Frontend data fetching:** The dashboard uses a Server Component (`dashboard/page.tsx`) that reads the cookie and calls the backend directly, then passes data to a Client Component. Don't move that fetch client-side.
+## Key conventions
 
 **Cookie auth:** The JWT token lives in a cookie named `token`. The frontend reads it with a regex (`/(?:^|; )token=([^;]*)/)`) to handle `=` padding in the JWT. Don't use `.split('=')[1]` — it truncates base64-padded tokens.
 
 **httpx calls to GitHub:** Always set `timeout=10` and call `.raise_for_status()`. Wrap in try/except for `httpx.HTTPError` and `httpx.TimeoutException`. One failed repo should not abort the whole sync — use `continue`.
 
 **Tailwind theme:** Custom colors are defined in `frontend/app/globals.css`. Use semantic names: `bg`, `bg-2`, `bg-3`, `text`, `text-mute`, `text-dim`, `lime`, `line`, `line-2`, `rarity-rare`, `rarity-epic`, `rarity-legendary`. Don't use raw hex values inline.
-
-## What is not yet built (Phase 2+)
-- Language type advantage (2× stat bonus based on matchup table)
-- Tie carry-over rule (next round worth double)
-- XP / coins awarded on battle finish
-- Streak tracking
-- Starter cards for users with no public repos
-- Player vs player matchmaking
-- Animations and flavor text ("Pokemon magic")
-- League / ranking system
