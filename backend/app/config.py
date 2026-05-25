@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_ID: str
     GITHUB_CLIENT_SECRET: str
     SECRET_KEY: str
-    ALLOWED_ORIGINS:list[str] = ["http://localhost:3000","https://card-game-five-puce.vercel.app/"]
+    ALLOWED_ORIGINS:list[str] = ["http://localhost:3000","https://card-game-five-puce.vercel.app"]
 
 
 settings = Settings()
