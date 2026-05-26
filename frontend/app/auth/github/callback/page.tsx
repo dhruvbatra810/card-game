@@ -24,7 +24,7 @@ function CallbackHandler() {
       })
       .then((data) => {
         if (data.access_token) {
-          document.cookie = `token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=None; Secure`
+          document.cookie = `token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax; Secure`
           router.replace('/')
         } else {
           setError('Login failed: no token received.')

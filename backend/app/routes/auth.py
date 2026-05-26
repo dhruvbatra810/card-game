@@ -14,7 +14,7 @@ router = APIRouter()
 def authLogin():
    url = f"https://github.com/login/oauth/authorize?client_id={settings.GITHUB_CLIENT_ID}&scope=read:user"
    return {"url":url}
-   
+
 @router.get('/auth/github/callback')
 def auth_callback(code:str ,session :Session = Depends(get_session)):
    try:
@@ -29,7 +29,7 @@ def auth_callback(code:str ,session :Session = Depends(get_session)):
       )
    except  httpx.HTTPStatusError as e:
      raise HTTPException(status_code=400, detail="GitHub returned an error")
-   
+
    access_token = token_res.json().get("access_token")
 
    if not access_token:
@@ -51,7 +51,7 @@ def auth_callback(code:str ,session :Session = Depends(get_session)):
             github_access_token= str(access_token)
         )
         session.add(user)
-       
+
    user.github_access_token = access_token
    session.commit()
    session.refresh(user)
