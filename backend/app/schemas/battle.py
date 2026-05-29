@@ -28,3 +28,10 @@ class RoundRead(SQLModel):
     was_critical: bool
     type_advantage: bool
     points_awarded: int
+
+
+class RoundSchema(RoundRead):
+    xp: int
+    coins: int
+    score_player: int
+    score_opponent: int

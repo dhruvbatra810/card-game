@@ -8,9 +8,38 @@ from app.models.round import Round
 from app.models.card import Card
 from sqlmodel import Session, select
 from datetime import datetime, timezone
+from app.schemas.battle import RoundSchema
 import random
 
 battle_router = APIRouter()
+
+# LANGUAGE_BEATS[lang] lists the languages that lang beats.
+# checkLanguageStat: if lang2 is in LANGUAGE_BEATS[lang1], lang1 wins; if lang1 is in LANGUAGE_BEATS[lang2], lang2 wins.
+LANGUAGE_BEATS: dict[str, list[str]] = {
+    "Rust":       ["C", "C++", "Python", "Java", "JavaScript", "Go"],
+    "Go":         ["Java", "Python", "Ruby", "PHP"],
+    "TypeScript": ["JavaScript", "Python", "PHP"],
+    "C++":        ["Java", "JavaScript", "Python", "Ruby"],
+    "Python":     ["Java", "JavaScript", "Ruby", "PHP"],
+    "Java":       ["JavaScript", "PHP", "Ruby"],
+    "Swift":      ["Objective-C", "Ruby", "PHP"],
+    "Kotlin":     ["Java", "PHP", "Ruby"],
+    "C":          ["Java", "JavaScript", "PHP"],
+    "JavaScript": ["PHP", "Ruby"],
+}
+
+def checkLanguageStat(lang1: str, lang2: str) -> int:
+    # returns 1 if lang1 wins, 2 if lang2 wins, 0 if no advantage
+    lang1_beats = LANGUAGE_BEATS.get(lang1, [])
+    if lang2 in lang1_beats:
+        return 1
+
+    lang2_beats = LANGUAGE_BEATS.get(lang2, [])
+    if lang1 in lang2_beats:
+        return 2
+
+    return 0
+
 
 
 class RoundRequest(BaseModel):
@@ -24,6 +53,14 @@ def start_battle(session:Session = Depends(get_session), user: User = Depends(ge
     battleV = Battle(
          player_id = user.id,               
     )
+
+    if user.last_played is not None:
+        time_since_last = datetime.now(timezone.utc) - user.last_played
+        if time_since_last.days >= 2:
+            user.current_streak = 0
+
+    user.last_played = datetime.now(timezone.utc)
+    session.add(user)
     session.add(battleV)
     session.commit()
     session.refresh(battleV)
@@ -38,7 +75,7 @@ def get_battle(session:Session = Depends(get_session), user: User = Depends(get_
 def get_battle_by_id(id:int,session:Session = Depends(get_session), user: User = Depends(get_current_user)):
     return session.exec(select(Battle).where((Battle.id == id) & ((Battle.player_id == user.id) | (Battle.opponent_id == user.id) ))).first()
 
-@battle_router.post('/battles/{id}/round', response_model=Round)
+@battle_router.post('/battles/{id}/round', response_model=RoundSchema)
 def start_round(id: int, body: RoundRequest, session: Session = Depends(get_session), user: User = Depends(get_current_user)):
     # fetch the battle and verify it belongs to this user
     battle = session.get(Battle, id)
@@ -79,13 +116,26 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
     was_critical = not was_tie and (max(p1_val, p2_val) >= min(p1_val, p2_val) * 10) if min(p1_val, p2_val) > 0 else False
     points = 2 if was_critical else 1
 
+    type_advantage = False
     if was_tie:
-        winner_id = None
+        lang_result = checkLanguageStat(p1_card.language, p2_card.language)
+        if lang_result == 1:
+            type_advantage = True
+            was_tie = False
+            winner_id = user.id
+            battle.score_player += 1
+        elif lang_result == 2:
+            type_advantage = True
+            was_tie = False
+            winner_id = None  # bot wins
+            battle.score_opponent += 1
+        else:
+            winner_id = None  # true tie, no advantage
     elif p1_val > p2_val:
         winner_id = user.id
         battle.score_player += points
     else:
-        winner_id = None  # bot win, no user id
+        winner_id = None  # bot win
         battle.score_opponent += points
 
     # count rounds played so far
@@ -100,10 +150,13 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
         winner_id=winner_id,
         was_tie=was_tie,
         was_critical=was_critical,
-        type_advantage=False,
+        type_advantage=type_advantage,
         points_awarded=points,
     )
     session.add(round_obj)
+
+    xp_earned = 0
+    coins_earned = 0
 
     # check if battle is now finished: first to 3 points, or all 5 rounds played
     is_last_round = (round_count + 1) >= 5
@@ -121,15 +174,34 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
             user.current_streak += 1
             if user.current_streak > user.best_streak:
                 user.best_streak = user.current_streak
-            # 100 xp for a win, +50 bonus for a critical-hit-heavy game
             user.xp += 100
             user.coins += 50
+            xp_earned = 100
+            coins_earned = 50
         else:
             user.losses += 1
             user.current_streak = 0
-            # 25 xp consolation for a loss
             user.xp += 25
+            xp_earned = 25
+            coins_earned = 0
 
     session.commit()
     session.refresh(round_obj)
-    return round_obj
+
+    return RoundSchema(
+        id=round_obj.id,
+        battle_id=round_obj.battle_id,
+        round_number=round_obj.round_number,
+        p1_card_id=round_obj.p1_card_id,
+        p2_card_id=round_obj.p2_card_id,
+        stat_chosen=round_obj.stat_chosen,
+        winner_id=round_obj.winner_id,
+        was_tie=round_obj.was_tie,
+        was_critical=round_obj.was_critical,
+        type_advantage=round_obj.type_advantage,
+        points_awarded=round_obj.points_awarded,
+        xp=xp_earned,
+        coins=coins_earned,
+        score_player=battle.score_player,
+        score_opponent=battle.score_opponent,
+    )
