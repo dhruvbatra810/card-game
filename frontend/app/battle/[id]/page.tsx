@@ -24,6 +24,8 @@ type RoundResult = {
   was_tie: boolean
   was_critical: boolean
   points_awarded: number
+  xp: number
+  coins: number
 }
 
 type BattleState = {
@@ -78,6 +80,8 @@ export default function BattlePage() {
   const [botCard, setBotCard] = useState<CardData | null>(null)
   const [phase, setPhase] = useState<Phase>('pick-card')
   const [isPicker, setIsPicker] = useState(true)
+  const [earnedXp, setEarnedXp] = useState(0)
+  const [earnedCoins, setEarnedCoins] = useState(0)
 
   // refs so the finish check always reads current scores regardless of stale closures
   const playerScoreRef = useRef(0)
@@ -158,6 +162,8 @@ export default function BattlePage() {
     setBotCard(botCardData)
 
     if (playerScoreRef.current >= 3 || opponentScoreRef.current >= 3 || round.round_number >= 5) {
+      setEarnedXp(round.xp)
+      setEarnedCoins(round.coins)
       setPhase('finished')
       return
     }
@@ -233,6 +239,16 @@ export default function BattlePage() {
           {' – '}
           <span className="text-rose font-bold">{battle.score_opponent}</span>
         </p>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5 bg-bg-3 border border-line rounded-ctrl px-4 py-2 text-chip text-text-dim">
+            <span className="w-1.5 h-1.5 rounded-full bg-lime inline-block" />
+            +{earnedXp} XP
+          </span>
+          <span className="flex items-center gap-1.5 bg-bg-3 border border-line rounded-ctrl px-4 py-2 text-chip text-text-dim">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber inline-block" />
+            +{earnedCoins} COINS
+          </span>
+        </div>
         <button
           onClick={() => router.push('/dashboard')}
           className="px-6 py-3 rounded-cta bg-lime text-bg font-display font-bold text-btn hover:brightness-110 transition-all shadow-lime-glow"

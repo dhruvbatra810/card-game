@@ -13,7 +13,7 @@ export default function ButtonSection() {
   },[])
 
   if (storage) {
-    return <Link href="/battle"    className="px-5 py-3 rounded-cta bg-lime text-bg font-display font-bold text-btn cursor-pointer hover:brightness-110 transition-all shadow-lime-glow">Battle</Link>
+    return <Link href="/dashboard" className="px-5 py-3 rounded-cta bg-lime text-bg font-display font-bold text-btn cursor-pointer hover:brightness-110 transition-all shadow-lime-glow">Go to Deck</Link>
   }
   return <div className="flex items-center gap-3">
     <LoginButton />

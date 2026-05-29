@@ -1,5 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, TIMESTAMP
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
 
 
 class User(SQLModel, table=True):
@@ -16,5 +21,12 @@ class User(SQLModel, table=True):
     current_streak: int = Field(default=0)
     xp: int = Field(default=0)
     coins: int = Field(default=0)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(
+        default_factory=utcnow,
+        sa_column=Column(TIMESTAMP(timezone=True), nullable=False)
+    )
     github_access_token: str | None = None
+    last_played: datetime | None = Field(
+        default=None,
+        sa_column=Column(TIMESTAMP(timezone=True), nullable=True)
+    )

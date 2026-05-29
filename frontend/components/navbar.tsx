@@ -7,7 +7,6 @@ import { toast } from 'sonner'
 
 const NAV_LINKS = [
   { label: 'Deck', href: '/dashboard' },
-  { label: 'Battle', href: '/battle' },
   { label: 'Profile', href: '/profile' },
   { label: 'Leaderboard', href: '/leaderboard' },
 ]
