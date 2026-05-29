@@ -6,11 +6,9 @@ import StatsBar from '@/components/profile/stats-bar'
 import CardCollection from '@/components/profile/card-collection'
 import BadgesPanel from '@/components/profile/badges-panel'
 import {
-  getLeagueTier,
   getXpLevel,
   getPowerScore,
   formatJoinDate,
-  getRankFromWins,
 } from '@/components/profile/profile-utils'
 
 type ProfileClientProps = {
@@ -30,9 +28,7 @@ export default function ProfileClient({ user, cards, battles }: ProfileClientPro
 
   const totalBattles = user.wins + user.losses
   const xpLevel = getXpLevel(user.xp)
-  const leagueTier = getLeagueTier(user.wins)
   const powerScore = getPowerScore(cards, user.wins)
-  const rank = getRankFromWins(user.wins)
   const joinDate = formatJoinDate(user.created_at)
   const initials = user.username.slice(0, 2).toUpperCase()
 
@@ -56,7 +52,7 @@ export default function ProfileClient({ user, cards, battles }: ProfileClientPro
           </h1>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-chip bg-bg-3 border border-line-2 rounded-badge px-2 py-1 text-cyan uppercase">
-              {leagueTier} · RANK {rank}
+              {user.league} · {user.rating} ELO
             </span>
             {user.current_streak >= 3 && (
               <span className="font-mono text-chip bg-bg-3 border border-amber rounded-badge px-2 py-1 text-amber uppercase">

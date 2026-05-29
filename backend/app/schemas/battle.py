@@ -35,3 +35,5 @@ class RoundSchema(RoundRead):
     coins: int
     score_player: int
     score_opponent: int
+    rating: int
+    rating_change: int

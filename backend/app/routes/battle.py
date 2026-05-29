@@ -28,6 +28,18 @@ LANGUAGE_BEATS: dict[str, list[str]] = {
     "JavaScript": ["PHP", "Ruby"],
 }
 
+def get_league(rating: int) -> str:
+    if rating < 1000:
+        return "bronze"
+    if rating < 1500:
+        return "silver"
+    if rating < 2000:
+        return "gold"
+    if rating < 2500:
+        return "platinum"
+    return "diamond"
+
+
 def checkLanguageStat(lang1: str, lang2: str) -> int:
     # returns 1 if lang1 wins, 2 if lang2 wins, 0 if no advantage
     lang1_beats = LANGUAGE_BEATS.get(lang1, [])
@@ -157,6 +169,7 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
 
     xp_earned = 0
     coins_earned = 0
+    rating_change = 0
 
     # check if battle is now finished: first to 3 points, or all 5 rounds played
     is_last_round = (round_count + 1) >= 5
@@ -178,12 +191,19 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
             user.coins += 50
             xp_earned = 100
             coins_earned = 50
+            user.rating += 25
+            rating_change = 25
         else:
             user.losses += 1
             user.current_streak = 0
             user.xp += 25
             xp_earned = 25
             coins_earned = 0
+            old_rating = user.rating
+            user.rating = max(0, user.rating - 15)
+            rating_change = user.rating - old_rating
+
+        user.league = get_league(user.rating)
 
     session.commit()
     session.refresh(round_obj)
@@ -204,4 +224,6 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
         coins=coins_earned,
         score_player=battle.score_player,
         score_opponent=battle.score_opponent,
+        rating=user.rating,
+        rating_change=rating_change,
     )

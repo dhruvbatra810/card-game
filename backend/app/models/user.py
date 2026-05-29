@@ -21,6 +21,8 @@ class User(SQLModel, table=True):
     current_streak: int = Field(default=0)
     xp: int = Field(default=0)
     coins: int = Field(default=0)
+    rating: int = Field(default=1000)
+    league: str = Field(default="silver")
     created_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(TIMESTAMP(timezone=True), nullable=False)

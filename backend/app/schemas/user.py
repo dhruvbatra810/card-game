@@ -13,4 +13,6 @@ class UserRead(SQLModel):
     current_streak: int
     xp: int
     coins: int
+    rating: int
+    league: str
     created_at: datetime

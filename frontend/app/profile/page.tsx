@@ -13,6 +13,8 @@ export type UserData = {
   current_streak: number
   xp: number
   coins: number
+  rating: number
+  league: string
   created_at: string
 }
 
