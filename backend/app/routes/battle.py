@@ -13,7 +13,8 @@ import random
 
 battle_router = APIRouter()
 
-# Which languages beat which others. If lang1 is in LANGUAGE_BEATS[lang2], lang2 wins.
+# LANGUAGE_BEATS[lang] lists the languages that lang beats.
+# checkLanguageStat: if lang2 is in LANGUAGE_BEATS[lang1], lang1 wins; if lang1 is in LANGUAGE_BEATS[lang2], lang2 wins.
 LANGUAGE_BEATS: dict[str, list[str]] = {
     "Rust":       ["C", "C++", "Python", "Java", "JavaScript", "Go"],
     "Go":         ["Java", "Python", "Ruby", "PHP"],
@@ -53,9 +54,7 @@ def start_battle(session:Session = Depends(get_session), user: User = Depends(ge
          player_id = user.id,               
     )
 
-    if user.last_played is None:
-        user.current_streak = 0
-    else:
+    if user.last_played is not None:
         time_since_last = datetime.now(timezone.utc) - user.last_played
         if time_since_last.days >= 2:
             user.current_streak = 0
