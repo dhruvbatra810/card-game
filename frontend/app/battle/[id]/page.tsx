@@ -228,11 +228,12 @@ export default function BattlePage() {
   // ── Finished screen ─────────────────────────────────────────────────────────
   if (phase === 'finished') {
     const playerWon = battle.score_player > battle.score_opponent
+    const isDraw = battle.score_player === battle.score_opponent
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-6 font-mono">
-        <span className="text-6xl">{playerWon ? '🏆' : '💀'}</span>
+        <span className="text-6xl">{playerWon ? '🏆' : isDraw ? '🤝' : '💀'}</span>
         <h1 className="font-display font-bold text-h2 text-text">
-          {playerWon ? 'You won!' : 'Bot wins!'}
+          {playerWon ? 'You won!' : isDraw ? "It's a draw!" : 'Bot wins!'}
         </h1>
         <p className="text-text-mute text-lede">
           Final score: <span className="text-lime font-bold">{battle.score_player}</span>

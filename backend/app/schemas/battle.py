@@ -33,3 +33,5 @@ class RoundRead(SQLModel):
 class RoundSchema(RoundRead):
     xp: int
     coins: int
+    score_player: int
+    score_opponent: int

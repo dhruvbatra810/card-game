@@ -121,10 +121,12 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
         lang_result = checkLanguageStat(p1_card.language, p2_card.language)
         if lang_result == 1:
             type_advantage = True
+            was_tie = False
             winner_id = user.id
             battle.score_player += 1
         elif lang_result == 2:
             type_advantage = True
+            was_tie = False
             winner_id = None  # bot wins
             battle.score_opponent += 1
         else:
@@ -200,4 +202,6 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
         points_awarded=round_obj.points_awarded,
         xp=xp_earned,
         coins=coins_earned,
+        score_player=battle.score_player,
+        score_opponent=battle.score_opponent,
     )
