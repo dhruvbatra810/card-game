@@ -21,9 +21,9 @@ export default function Navbar() {
         if (!r.ok) return null
         return r.json()
       })
-      .then((data) => { if (data) setUser(data) })
+      .then((data) => setUser(data ?? null))
       .catch(() => { toast.error('Failed to load user') })
-  }, [])
+  }, [pathname])
   return (
     <nav className="z-50 bg-bg-2 border-b border-line h-14 flex items-center px-6">
       {/* Logo */}

@@ -1,10 +1,12 @@
 'use client'
 
-import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function ButtonSection() {
   const [storage,setStorage] = useState<string|null>(null)
+  const router = useRouter()
 
   useEffect(()=>{
     const match = document.cookie.match(/(?:^|; )token=([^;]*)/)
@@ -12,8 +14,20 @@ export default function ButtonSection() {
     setStorage(token)
   },[])
 
+  function handleGoToDeck() {
+    toast.loading('Loading your deck...')
+    router.push('/dashboard')
+  }
+
   if (storage) {
-    return <Link href="/dashboard" className="px-5 py-3 rounded-cta bg-lime text-bg font-display font-bold text-btn cursor-pointer hover:brightness-110 transition-all shadow-lime-glow">Go to Deck</Link>
+    return (
+      <button
+        onClick={handleGoToDeck}
+        className="px-5 py-3 rounded-cta bg-lime text-bg font-display font-bold text-btn cursor-pointer hover:brightness-110 transition-all shadow-lime-glow"
+      >
+        Go to Deck
+      </button>
+    )
   }
   return <div className="flex items-center gap-3">
     <LoginButton />
