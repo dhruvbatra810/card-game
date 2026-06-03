@@ -18,7 +18,9 @@ export default function MatchmakingPage() {
     let active = true
     setStatus('searching')
     setElapsed(0)
-    const ws = new WebSocket(`${WS_BASE}/ws/matchmaking`)
+    const tokenMatch = document.cookie.match(/(?:^|; )token=([^;]*)/)
+    const token = tokenMatch ? tokenMatch[1] : ''
+    const ws = new WebSocket(`${WS_BASE}/ws/matchmaking?token=${encodeURIComponent(token)}`)
     wsRef.current = ws
 
     ws.onmessage = (event) => {

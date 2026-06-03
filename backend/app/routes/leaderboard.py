@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
 from sqlmodel import SQLModel, Session, select
 from app.db.session import get_session
@@ -32,8 +32,8 @@ class LeaderboardResponse(SQLModel):
 @leaderboard_router.get('/leaderboard', response_model=LeaderboardResponse)
 def get_leaderboard(
     league: str,
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     session: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
@@ -47,7 +47,7 @@ def get_leaderboard(
     results = session.exec(
         select(User)
         .where(User.league == league)
-        .order_by(User.rating.desc())
+        .order_by(User.rating.desc(), User.id.asc())
         .limit(limit)
         .offset(offset)
     ).all()
