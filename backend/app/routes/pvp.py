@@ -208,8 +208,7 @@ async def _resolve_round(redis, battle_id: int):
 
 @pvp_router.websocket("/ws/battle/{battle_id}")
 async def pvp_battle(websocket: WebSocket, battle_id: int):
-    # Authenticate via cookie
-    token = websocket.cookies.get("token")
+    token = websocket.cookies.get("token") or websocket.query_params.get("token")
     if not token:
         print(f"[pvp] battle {battle_id}: rejected — no token")
         await websocket.close(code=4001)

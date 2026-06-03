@@ -1,6 +1,7 @@
 import asyncio
 import json
 import time
+import uuid
 from jose import jwt, JWTError
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlmodel import Session
@@ -28,8 +29,7 @@ def _decode_token(token: str) -> int | None:
 
 @matchmaking_router.websocket("/ws/matchmaking")
 async def matchmaking_endpoint(websocket: WebSocket):
-    # Authenticate via cookie (browser sends cookies automatically on WS handshake)
-    token = websocket.cookies.get("token")
+    token = websocket.cookies.get("token") or websocket.query_params.get("token")
     if not token:
         await websocket.close(code=4001)
         return
@@ -55,8 +55,11 @@ async def matchmaking_endpoint(websocket: WebSocket):
     # (fires when a DIFFERENT server matches us)
     await pubsub.subscribe(f"match:{user_id}")
 
-    # Add ourselves to the Redis queue for our league
-    await redis.hset(f"queue:{user_league}", str(user_id), "1")
+    # Add ourselves to the Redis queue — store conn_id so the finally block
+    # can check it still owns the slot before deleting (prevents stale cleanup
+    # from a previous connection wiping a newer connection's queue entry)
+    conn_id = str(uuid.uuid4())
+    await redis.hset(f"queue:{user_league}", str(user_id), conn_id)
 
     match_found = asyncio.Event()
 
@@ -89,6 +92,7 @@ async def matchmaking_endpoint(websocket: WebSocket):
                     break
 
                 all_queued = await redis.hgetall(f"queue:{league}")
+                print(f"[mm] user {user_id} ({user_league}) scanning queue:{league} → {all_queued}")
 
                 for other_id_str in all_queued:
                     other_id = int(other_id_str)
@@ -120,6 +124,7 @@ async def matchmaking_endpoint(websocket: WebSocket):
                     await redis.hdel(f"queue:{user_league}", str(user_id))
                     await redis.hdel(f"queue:{league}", str(other_id))
 
+                    print(f"[mm] match found! battle {battle_id} between user {user_id} and {other_id}")
                     # Send match_found directly to our own WebSocket (we found it)
                     await websocket.send_json({"type": "match_found", "battle_id": battle_id})
 
@@ -151,17 +156,31 @@ async def matchmaking_endpoint(websocket: WebSocket):
                 return
             await asyncio.sleep(0.05)
 
+    async def listen_disconnect():
+        """Stops the scan immediately when the client closes the WebSocket."""
+        try:
+            while not match_found.is_set():
+                await websocket.receive_text()
+        except WebSocketDisconnect:
+            match_found.set()
+
     t1 = asyncio.create_task(scan_queue())
     t2 = asyncio.create_task(receive_match())
+    t3 = asyncio.create_task(listen_disconnect())
 
     try:
-        await asyncio.wait({t1, t2}, return_when=asyncio.FIRST_COMPLETED)
+        await asyncio.wait({t1, t2, t3}, return_when=asyncio.FIRST_COMPLETED)
     except WebSocketDisconnect:
         pass
     finally:
         t1.cancel()
         t2.cancel()
-        # Clean up queue and pub/sub regardless of how we exited
-        await redis.hdel(f"queue:{user_league}", str(user_id))
+        t3.cancel()
+        # Only delete our queue slot if it still belongs to this connection.
+        # A newer connection may have already overwritten it with a different conn_id.
+        current = await redis.hget(f"queue:{user_league}", str(user_id))
+        print(f"[mm] finally user {user_id} ({user_league}): stored={current!r} mine={conn_id!r} will_delete={current == conn_id}")
+        if current == conn_id:
+            await redis.hdel(f"queue:{user_league}", str(user_id))
         await pubsub.unsubscribe(f"match:{user_id}")
         await pubsub.aclose()
