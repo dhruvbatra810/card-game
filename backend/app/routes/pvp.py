@@ -82,7 +82,11 @@ async def _resolve_round(redis, battle_id: int):
             else:
                 stat = choice2["stat"]
 
-            result = compare_stats(p1_card, p2_card, stat, player1_id, player2_id)
+            try:
+                result = compare_stats(p1_card, p2_card, stat, player1_id, player2_id)
+            except ValueError:
+                print(f"[pvp] battle {battle_id}: invalid stat {stat!r}, aborting round")
+                return
 
             # Update battle scores
             if result["winner_id"] == player1_id:

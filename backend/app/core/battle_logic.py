@@ -18,6 +18,8 @@ LANGUAGE_BEATS: dict[str, list[str]] = {
 
 LEAGUE_ORDER = ["bronze", "silver", "gold", "platinum", "diamond"]
 
+VALID_STATS = frozenset(["stars", "forks", "age_years", "contributors", "activity_score"])
+
 
 def get_league(rating: int) -> str:
     if rating < 1000:
@@ -60,7 +62,10 @@ def compare_stats(p1_card, p2_card, stat: str, p1_user_id: int, p2_user_id) -> d
     """
     Compare two cards on a stat. Returns result dict without writing to DB.
     p2_user_id can be None for bot battles (bot has no user ID).
+    Raises ValueError for unrecognised stat names.
     """
+    if stat not in VALID_STATS:
+        raise ValueError(f"Invalid stat: {stat!r}")
     p1_val = getattr(p1_card, stat)
     p2_val = getattr(p2_card, stat)
 

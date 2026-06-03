@@ -82,7 +82,10 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
     p2_card = random.choice(available)
 
     # compare the chosen stat — bot has no user_id so p2_user_id is None
-    result = compare_stats(p1_card, p2_card, body.stat_chosen, user.id, None)
+    try:
+        result = compare_stats(p1_card, p2_card, body.stat_chosen, user.id, None)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     winner_id = result["winner_id"]
     was_tie = result["was_tie"]
     was_critical = result["was_critical"]
