@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import Card, { type CardData } from '@/components/card'
+import { type CardData } from '@/components/card'
 import BattleShell from './_components/battle-shell'
 import OpponentPanel from './_components/opponent-panel'
 import PlayerHand from './_components/player-hand'
@@ -54,6 +54,8 @@ export default function BotBattle({ battleId, selectedIds }: BotBattleProps) {
         const filtered = allCards.filter((c) => selectedIds.includes(c.id))
         setMyCards(filtered)
         setBattle(battleData)
+        playerScoreRef.current = battleData.score_player
+        opponentScoreRef.current = battleData.score_opponent
       } catch (err) {
         console.error('Failed to load battle data:', err)
       }

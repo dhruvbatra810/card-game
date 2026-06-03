@@ -60,6 +60,8 @@ export default function PvpBattle({ battleId }: PvpBattleProps) {
         const battleData: BattleState = await battleRes.json()
         setMyCards(allCards)
         setBattle(battleData)
+        setPvpScoreMe(battleData.score_player)
+        setPvpScoreOpp(battleData.score_opponent)
       } catch (err) {
         console.error('Failed to load battle data:', err)
       }
@@ -73,7 +75,12 @@ export default function PvpBattle({ battleId }: PvpBattleProps) {
     let active = true
     let battleStarted = false
 
-    const ws = new WebSocket(`${WS_BASE}/ws/battle/${battleId}`)
+    const tokenMatch = document.cookie.match(/(?:^|; )token=([^;]*)/)
+    const token = tokenMatch ? tokenMatch[1] : ''
+    const wsUrl = token
+      ? `${WS_BASE}/ws/battle/${battleId}?token=${encodeURIComponent(token)}`
+      : `${WS_BASE}/ws/battle/${battleId}`
+    const ws = new WebSocket(wsUrl)
     wsRef.current = ws
 
     ws.onmessage = (event) => {
@@ -154,6 +161,7 @@ export default function PvpBattle({ battleId }: PvpBattleProps) {
   function submitPvpMove(statKey: string, cardOverride?: CardData) {
     const cardToUse = cardOverride ?? activeCard
     if (!cardToUse || !wsRef.current) return
+    if (wsRef.current.readyState !== WebSocket.OPEN) return
     wsRef.current.send(JSON.stringify({
       type: 'submit',
       card_id: cardToUse.id,
@@ -319,7 +327,7 @@ export default function PvpBattle({ battleId }: PvpBattleProps) {
           myCards={myCards}
           usedCardIds={usedCardIds}
           activeCard={activeCard}
-          canPick={phase === 'pick-card'}
+          canPick={phase === 'pick-card' && pvpRole !== null}
           onCardPick={handleCardPick}
         />
       }
