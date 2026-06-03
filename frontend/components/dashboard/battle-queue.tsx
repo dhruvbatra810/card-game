@@ -109,7 +109,7 @@ export default function BattleQueue({ selected, onRemove }: BattleQueueProps) {
         </span>
       </div>
 
-      {/* Start battle */}
+      {/* Start bot battle */}
       <button
         onClick={handleStartBattle}
         disabled={!canStart || starting}
@@ -120,6 +120,14 @@ export default function BattleQueue({ selected, onRemove }: BattleQueueProps) {
         }`}
       >
         {starting ? 'Starting...' : canStart ? 'Start Battle →' : `Pick ${5 - selected.length} more card${5 - selected.length !== 1 ? 's' : ''}`}
+      </button>
+
+      {/* Find a real opponent */}
+      <button
+        onClick={() => router.push('/matchmaking')}
+        className="w-full py-3 rounded-cta border border-line font-display font-bold text-btn text-text-mute hover:border-cyan hover:text-cyan transition-colors"
+      >
+        ⚔ Find PvP Match
       </button>
     </div>
   )

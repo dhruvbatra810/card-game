@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlmodel import SQLModel, Session, select
 from app.db.session import get_session
 from app.core.deps import get_current_user
@@ -24,25 +25,37 @@ class LeaderboardEntry(SQLModel):
 class LeaderboardResponse(SQLModel):
     entries: list[LeaderboardEntry]
     total: int
+    limit: int
+    offset: int
 
 
 @leaderboard_router.get('/leaderboard', response_model=LeaderboardResponse)
 def get_leaderboard(
     league: str,
+    limit: int = 50,
+    offset: int = 0,
     session: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
     if league not in VALID_LEAGUES:
         raise HTTPException(status_code=400, detail="Invalid league")
 
+    total = session.exec(
+        select(func.count(User.id)).where(User.league == league)
+    ).one()
+
     results = session.exec(
-        select(User).where(User.league == league).order_by(User.rating.desc())
+        select(User)
+        .where(User.league == league)
+        .order_by(User.rating.desc())
+        .limit(limit)
+        .offset(offset)
     ).all()
 
     entries = []
     for i, u in enumerate(results):
         entry = LeaderboardEntry(
-            rank=i + 1,
+            rank=offset + i + 1,
             id=u.id,
             username=u.username,
             avatar_url=u.avatar_url,
@@ -54,4 +67,4 @@ def get_leaderboard(
         )
         entries.append(entry)
 
-    return LeaderboardResponse(entries=entries, total=len(entries))
+    return LeaderboardResponse(entries=entries, total=total, limit=limit, offset=offset)

@@ -63,7 +63,6 @@ export default function LeaderboardClient({ user, initialLeague, initialData }: 
 
   async function handleTabChange(league: string) {
     if (league === selectedLeague) return
-    setSelectedLeague(league)
     setIsLoading(true)
     try {
       const res = await fetch(
@@ -72,9 +71,16 @@ export default function LeaderboardClient({ user, initialLeague, initialData }: 
       )
       if (res.ok) {
         const data = await res.json()
+        setSelectedLeague(league)
         setEntries(data.entries)
         setTotal(data.total)
+      } else {
+        setEntries([])
+        setTotal(0)
       }
+    } catch {
+      setEntries([])
+      setTotal(0)
     } finally {
       setIsLoading(false)
     }

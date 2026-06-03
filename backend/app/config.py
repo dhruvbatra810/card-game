@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_SECRET: str
     SECRET_KEY: str
     ALLOWED_ORIGINS:list[str] = ["http://localhost:3000","https://card-game-five-puce.vercel.app"]
+    REDIS_URL: str = "redis://localhost:6379"
 
 
 settings = Settings()

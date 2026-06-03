@@ -2,6 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## How to write plans
+
+The user is learning. When writing a plan or explaining an architecture, write it like you're explaining it to someone who is smart but new to the technology:
+- Use plain English sentences, not bullet-point jargon
+- Explain what will happen step by step ("when the player clicks X, the browser does Y, then the server does Z")
+- If you introduce a new tool or concept (Redis, WebSockets, Pub/Sub), explain what it does in one sentence before using it
+- Avoid sentences like "leverage the Pub/Sub paradigm" — say "all servers receive the message" instead
+- Short paragraphs over dense bullet lists
+
+## Redis vs Database — what goes where
+
+Redis is a scratch pad for **temporary waiting state** only. The real database (Postgres) stores everything permanent.
+
+- Matchmaking queue (player searching) → Redis, deleted when matched or timed out
+- Pending round choice (player submitted but opponent hasn't yet) → Redis, deleted after round resolves
+- Pub/Sub messages (notify other servers) → Redis, ephemeral (no storage at all)
+- Round results, battle results, ratings, XP → **Postgres**, always, same as before
+
 ## Python code style — strictly required
 
 The user is new to Python. All Python code written in this repo must follow these rules:

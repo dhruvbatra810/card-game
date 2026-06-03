@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app.db.session import get_session
 from app.core.deps import get_current_user
+from app.core.battle_logic import get_league, compare_stats
 from app.models.user import User
 from app.models.battle import Battle
 from app.models.round import Round
@@ -12,45 +13,6 @@ from app.schemas.battle import RoundSchema
 import random
 
 battle_router = APIRouter()
-
-# LANGUAGE_BEATS[lang] lists the languages that lang beats.
-# checkLanguageStat: if lang2 is in LANGUAGE_BEATS[lang1], lang1 wins; if lang1 is in LANGUAGE_BEATS[lang2], lang2 wins.
-LANGUAGE_BEATS: dict[str, list[str]] = {
-    "Rust":       ["C", "C++", "Python", "Java", "JavaScript", "Go"],
-    "Go":         ["Java", "Python", "Ruby", "PHP"],
-    "TypeScript": ["JavaScript", "Python", "PHP"],
-    "C++":        ["Java", "JavaScript", "Python", "Ruby"],
-    "Python":     ["Java", "JavaScript", "Ruby", "PHP"],
-    "Java":       ["JavaScript", "PHP", "Ruby"],
-    "Swift":      ["Objective-C", "Ruby", "PHP"],
-    "Kotlin":     ["Java", "PHP", "Ruby"],
-    "C":          ["Java", "JavaScript", "PHP"],
-    "JavaScript": ["PHP", "Ruby"],
-}
-
-def get_league(rating: int) -> str:
-    if rating < 1000:
-        return "bronze"
-    if rating < 1500:
-        return "silver"
-    if rating < 2000:
-        return "gold"
-    if rating < 2500:
-        return "platinum"
-    return "diamond"
-
-
-def checkLanguageStat(lang1: str, lang2: str) -> int:
-    # returns 1 if lang1 wins, 2 if lang2 wins, 0 if no advantage
-    lang1_beats = LANGUAGE_BEATS.get(lang1, [])
-    if lang2 in lang1_beats:
-        return 1
-
-    lang2_beats = LANGUAGE_BEATS.get(lang2, [])
-    if lang1 in lang2_beats:
-        return 2
-
-    return 0
 
 
 
@@ -119,39 +81,25 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
         raise HTTPException(status_code=400, detail="No bot cards available")
     p2_card = random.choice(available)
 
-    # compare the chosen stat
-    p1_val = getattr(p1_card, body.stat_chosen)
-    p2_val = getattr(p2_card, body.stat_chosen)
+    # compare the chosen stat — bot has no user_id so p2_user_id is None
+    try:
+        result = compare_stats(p1_card, p2_card, body.stat_chosen, user.id, None)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    winner_id = result["winner_id"]
+    was_tie = result["was_tie"]
+    was_critical = result["was_critical"]
+    type_advantage = result["type_advantage"]
+    points = result["points_awarded"]
 
-    was_tie = p1_val == p2_val
-    # critical hit: winner has 10x or more the stat
-    was_critical = not was_tie and (max(p1_val, p2_val) >= min(p1_val, p2_val) * 10) if min(p1_val, p2_val) > 0 else False
-    points = 2 if was_critical else 1
-
-    type_advantage = False
-    if was_tie:
-        lang_result = checkLanguageStat(p1_card.language, p2_card.language)
-        if lang_result == 1:
-            type_advantage = True
-            was_tie = False
-            winner_id = user.id
-            battle.score_player += 1
-        elif lang_result == 2:
-            type_advantage = True
-            was_tie = False
-            winner_id = None  # bot wins
-            battle.score_opponent += 1
-        else:
-            winner_id = None  # true tie, no advantage
-    elif p1_val > p2_val:
-        winner_id = user.id
+    if winner_id == user.id:
         battle.score_player += points
-    else:
-        winner_id = None  # bot win
+    elif not was_tie:
+        # winner_id is None and not a tie means bot won
         battle.score_opponent += points
 
-    # count rounds played so far
-    round_count = len(session.exec(select(Round).where(Round.battle_id == id)).all())
+    # round_count: use the already-fetched used_rounds list
+    round_count = len(used_rounds)
 
     round_obj = Round(
         battle_id=id,

@@ -87,7 +87,7 @@ export default function ProfileClient({ user, cards, battles }: ProfileClientPro
 
         {/* Right sidebar — can scroll if content overflows */}
         <div className="w-64 shrink-0 overflow-y-auto">
-          <BadgesPanel userId={user.id} wins={user.wins} battles={battles} />
+          <BadgesPanel userId={user.id} league={user.league} rating={user.rating} battles={battles} />
         </div>
 
       </div>

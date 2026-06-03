@@ -1,12 +1,31 @@
 'use client'
 
-import { getLeagueTier, getLeagueProgress } from '@/components/profile/profile-utils'
 import type { BattleData } from '@/app/profile/page'
 
 type BadgesPanelProps = {
   userId: number
-  wins: number
+  league: string
+  rating: number
   battles: BattleData[]
+}
+
+const LEAGUE_THRESHOLDS: Record<string, { next: string; max: number; min: number }> = {
+  bronze:   { min: 0,    max: 1000, next: 'Silver'   },
+  silver:   { min: 1000, max: 1500, next: 'Gold'     },
+  gold:     { min: 1500, max: 2000, next: 'Platinum' },
+  platinum: { min: 2000, max: 2500, next: 'Diamond'  },
+  diamond:  { min: 2500, max: 2500, next: 'MAX'      },
+}
+
+function getLeagueProgress(league: string, rating: number) {
+  const tier = LEAGUE_THRESHOLDS[league] ?? LEAGUE_THRESHOLDS['bronze']
+  if (league === 'diamond') {
+    return { current: 1, needed: 1, next: 'MAX', rating_to_next: 0 }
+  }
+  const current = rating - tier.min
+  const needed = tier.max - tier.min
+  const rating_to_next = tier.max - rating
+  return { current, needed, next: tier.next, rating_to_next }
 }
 
 type BadgeDefinition = {
@@ -28,9 +47,8 @@ const BADGE_DEFINITIONS: BadgeDefinition[] = [
   { icon: '◉', color: 'text-text-mute', unlocked: false },
 ]
 
-export default function BadgesPanel({ userId, wins, battles }: BadgesPanelProps) {
-  const leagueTier = getLeagueTier(wins)
-  const progress = getLeagueProgress(wins)
+export default function BadgesPanel({ userId, league, rating, battles }: BadgesPanelProps) {
+  const progress = getLeagueProgress(league, rating)
   const pct = Math.round((progress.current / progress.needed) * 100)
 
   const unlockedCount = BADGE_DEFINITIONS.filter((b) => b.unlocked).length
@@ -76,10 +94,10 @@ export default function BadgesPanel({ userId, wins, battles }: BadgesPanelProps)
         <div className="bg-bg-3 border border-line rounded-panel px-4 py-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="font-mono text-chip font-bold text-cyan uppercase">
-              {leagueTier}
+              {league}
             </span>
             <span className="font-mono text-chip text-text-mute">
-              {wins} / {wins + progress.wins_to_next} WINS
+              {rating} / {rating + progress.rating_to_next} ELO
             </span>
           </div>
           <div className="w-full h-1.5 bg-bg rounded-full overflow-hidden border border-line">
@@ -89,8 +107,8 @@ export default function BadgesPanel({ userId, wins, battles }: BadgesPanelProps)
             />
           </div>
           <span className="font-mono text-chip text-text-mute">
-            {progress.wins_to_next > 0
-              ? `${progress.wins_to_next} wins from ${progress.next} promotion`
+            {progress.rating_to_next > 0
+              ? `${progress.rating_to_next} ELO from ${progress.next} promotion`
               : 'MAX LEAGUE'}
           </span>
         </div>

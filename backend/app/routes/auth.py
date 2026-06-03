@@ -34,7 +34,7 @@ def auth_callback(code:str ,session :Session = Depends(get_session)):
 
    if not access_token:
       return { "error": "Invalid email format", "code": 400}
-   print('token',access_token,token_res.json())
+
    user_res = httpx.get(
       "https://api.github.com/user",
       headers={"Authorization":F"Bearer {access_token}"}

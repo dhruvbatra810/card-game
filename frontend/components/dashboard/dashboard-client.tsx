@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import CardGrid, { type CardData } from './card-grid'
 import BattleQueue from './battle-queue'
 import DeckHeader from './deck-header'
@@ -11,6 +12,10 @@ export default function DashboardClient({ initialCards }: { initialCards: CardDa
   const [cards, setCards] = useState<CardData[]>(initialCards)
   const [selected, setSelected] = useState<CardData[]>([])
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    toast.dismiss()
+  }, [])
 
   function handleRemove(id: number) {
     setSelected((prev) => prev.filter((c) => c.id !== id))
