@@ -11,6 +11,7 @@ from app.models.user import User
 from app.models.battle import Battle
 from app.models.round import Round
 from app.models.card import Card
+from app.models.language import Language, LanguageMatchup
 from app.core.redis_client import get_redis
 from app.core.battle_logic import compare_stats, apply_pvp_battle_results, apply_pvp_draw_results
 
@@ -127,6 +128,32 @@ async def _resolve_round(redis, battle_id: int):
 
             await redis.set(f"battle:{battle_id}:picker", str(next_picker_id))
 
+            flavor_text = None
+            if result["type_advantage"]:
+                if result["winner_id"] == player1_id:
+                    winner_lang_name = p1_card.language
+                    loser_lang_name = p2_card.language
+                else:
+                    winner_lang_name = p2_card.language
+                    loser_lang_name = p1_card.language
+
+                winner_lang = session.exec(
+                    select(Language).where(Language.name == winner_lang_name)
+                ).first()
+                loser_lang = session.exec(
+                    select(Language).where(Language.name == loser_lang_name)
+                ).first()
+
+                if winner_lang and loser_lang:
+                    matchup = session.exec(
+                        select(LanguageMatchup).where(
+                            LanguageMatchup.winner_lang_id == winner_lang.id,
+                            LanguageMatchup.loser_lang_id == loser_lang.id,
+                        )
+                    ).first()
+                    if matchup:
+                        flavor_text = matchup.flavor_text
+
             round_msg = {
                 "type": "round_result",
                 "player1_id": player1_id,
@@ -140,6 +167,7 @@ async def _resolve_round(redis, battle_id: int):
                 "was_tie": result["was_tie"],
                 "was_critical": result["was_critical"],
                 "type_advantage": result["type_advantage"],
+                "flavor_text": flavor_text,
                 "points_awarded": result["points_awarded"],
                 "next_picker_id": next_picker_id,
             }
@@ -358,6 +386,7 @@ async def pvp_battle(websocket: WebSocket, battle_id: int):
                             "was_tie": data["was_tie"],
                             "was_critical": data["was_critical"],
                             "type_advantage": data["type_advantage"],
+                            "flavor_text": data.get("flavor_text"),
                             "points_awarded": data["points_awarded"],
                             "next_picker_id": data["next_picker_id"],
                             "i_pick_next": data["next_picker_id"] == user_id,

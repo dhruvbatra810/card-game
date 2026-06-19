@@ -7,6 +7,7 @@ from app.models.user import User
 from app.models.battle import Battle
 from app.models.round import Round
 from app.models.card import Card
+from app.models.language import Language, LanguageMatchup
 from sqlmodel import Session, select
 from datetime import datetime, timezone
 from app.schemas.battle import RoundSchema
@@ -92,6 +93,28 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
     type_advantage = result["type_advantage"]
     points = result["points_awarded"]
 
+    flavor_text = None
+    if type_advantage:
+        if winner_id == user.id:
+            winner_lang_name = p1_card.language
+            loser_lang_name = p2_card.language
+        else:
+            winner_lang_name = p2_card.language
+            loser_lang_name = p1_card.language
+
+        winner_lang = session.exec(select(Language).where(Language.name == winner_lang_name)).first()
+        loser_lang = session.exec(select(Language).where(Language.name == loser_lang_name)).first()
+
+        if winner_lang and loser_lang:
+            matchup = session.exec(
+                select(LanguageMatchup).where(
+                    LanguageMatchup.winner_lang_id == winner_lang.id,
+                    LanguageMatchup.loser_lang_id == loser_lang.id,
+                )
+            ).first()
+            if matchup:
+                flavor_text = matchup.flavor_text
+
     if winner_id == user.id:
         battle.score_player += points
     elif not was_tie:
@@ -167,6 +190,7 @@ def start_round(id: int, body: RoundRequest, session: Session = Depends(get_sess
         was_tie=round_obj.was_tie,
         was_critical=round_obj.was_critical,
         type_advantage=round_obj.type_advantage,
+        flavor_text=flavor_text,
         points_awarded=round_obj.points_awarded,
         xp=xp_earned,
         coins=coins_earned,

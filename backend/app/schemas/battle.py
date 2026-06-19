@@ -27,6 +27,7 @@ class RoundRead(SQLModel):
     was_tie: bool
     was_critical: bool
     type_advantage: bool
+    flavor_text: str | None = None
     points_awarded: int
 
 

@@ -7,6 +7,7 @@ import BattleShell from './_components/battle-shell'
 import OpponentPanel from './_components/opponent-panel'
 import PlayerHand from './_components/player-hand'
 import FinishedScreen from './_components/finished-screen'
+import { RoundBanner } from './_components/animations'
 import {
   STATS,
   type RoundResult,
@@ -278,17 +279,28 @@ export default function BotBattle({ battleId, selectedIds }: BotBattleProps) {
       {/* Round result message */}
       {phase === 'result' && lastRound && (
         <div className="flex flex-col items-center gap-3 mt-2">
-          {lastRound.was_tie && (
-            <p className="font-mono text-chip text-amber uppercase tracking-widest">Tie — same picker next round</p>
-          )}
-          {lastRound.was_critical && (
-            <p className="font-mono text-chip text-lime uppercase tracking-widest">⚡ Critical hit! +2 points</p>
-          )}
-          {!lastRound.was_tie && lastRound.winner_id !== null && (
-            <p className="font-mono text-chip text-lime uppercase tracking-widest">You win this round!</p>
-          )}
-          {!lastRound.was_tie && lastRound.winner_id === null && (
-            <p className="font-mono text-chip text-rose uppercase tracking-widest">Bot wins this round</p>
+          <RoundBanner
+            visible={true}
+            variant={
+              lastRound.was_critical ? 'critical' :
+              lastRound.was_tie ? 'tie' :
+              lastRound.winner_id !== null ? 'win' : 'lose'
+            }
+            message={
+              lastRound.was_tie ? 'Tie!' :
+              lastRound.winner_id !== null ? 'You win!' : 'Bot wins!'
+            }
+            subMessage={
+              lastRound.was_critical ? '⚡ Critical hit! +2 points' :
+              lastRound.was_tie ? 'Same picker next round' :
+              undefined
+            }
+          />
+          {lastRound.type_advantage && lastRound.flavor_text && (
+            <div className="flex flex-col items-center gap-1 px-4 py-2 rounded-panel bg-bg-3 border border-line max-w-xs text-center">
+              <p className="font-mono text-chip text-lime uppercase tracking-widest">Type advantage!</p>
+              <p className="font-mono text-[11px] text-text-mute italic">{lastRound.flavor_text}</p>
+            </div>
           )}
           <p className="font-mono text-[10px] text-text-mute uppercase tracking-widest mt-1">Next round starting...</p>
         </div>

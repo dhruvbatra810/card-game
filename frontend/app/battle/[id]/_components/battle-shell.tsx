@@ -1,5 +1,6 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
+import { ScorePop } from './animations'
 
 interface BattleShellProps {
   battleId: number
@@ -44,9 +45,9 @@ export default function BattleShell({
 
         <div className="flex items-center gap-3">
           <span className="font-mono text-chip text-text-mute uppercase">You</span>
-          <span className="font-display font-bold text-h3 text-lime">{scorePlayer}</span>
+          <ScorePop value={scorePlayer} color="lime" />
           <span className="font-mono text-text-mute">–</span>
-          <span className="font-display font-bold text-h3 text-rose">{scoreOpponent}</span>
+          <ScorePop value={scoreOpponent} color="rose" />
           <span className="font-mono text-chip text-text-mute uppercase">{opponentLabel}</span>
         </div>
 
