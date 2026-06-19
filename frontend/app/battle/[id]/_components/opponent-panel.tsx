@@ -1,5 +1,6 @@
 import Card, { type CardData } from '@/components/card'
 import CardBack from './card-back'
+import { CardFlip } from './animations'
 
 interface OpponentPanelProps {
   opponentLabel: string
@@ -12,7 +13,11 @@ export default function OpponentPanel({ opponentLabel, card }: OpponentPanelProp
       <span className="font-mono text-chip text-text-mute uppercase tracking-widest">
         {opponentLabel} Revealed
       </span>
-      {card ? <Card card={card} /> : <CardBack />}
+      <CardFlip
+        revealed={card !== null}
+        front={card ? <Card card={card} /> : <CardBack />}
+        back={<CardBack />}
+      />
     </div>
   )
 }

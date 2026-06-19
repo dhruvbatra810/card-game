@@ -7,6 +7,7 @@ import BattleShell from './_components/battle-shell'
 import OpponentPanel from './_components/opponent-panel'
 import PlayerHand from './_components/player-hand'
 import FinishedScreen from './_components/finished-screen'
+import { RoundBanner } from './_components/animations'
 import {
   STATS,
   type PvpRoundResult,
@@ -268,17 +269,28 @@ export default function PvpBattle({ battleId }: PvpBattleProps) {
       {phase === 'pvp-result' && pvpLastRound && (
         <div className="w-full max-w-sm flex flex-col gap-4">
           <div className="flex flex-col items-center gap-2">
-            {pvpLastRound.was_tie && (
-              <p className="font-mono text-chip text-amber uppercase tracking-widest">Tie!</p>
-            )}
-            {pvpLastRound.was_critical && (
-              <p className="font-mono text-chip text-lime uppercase tracking-widest">⚡ Critical hit! +2 points</p>
-            )}
-            {!pvpLastRound.was_tie && pvpLastRound.i_won && (
-              <p className="font-mono text-chip text-lime uppercase tracking-widest">You win this round!</p>
-            )}
-            {!pvpLastRound.was_tie && !pvpLastRound.i_won && (
-              <p className="font-mono text-chip text-rose uppercase tracking-widest">Opponent wins this round</p>
+            <RoundBanner
+              visible={true}
+              variant={
+                pvpLastRound.was_critical ? 'critical' :
+                pvpLastRound.was_tie ? 'tie' :
+                pvpLastRound.i_won ? 'win' : 'lose'
+              }
+              message={
+                pvpLastRound.was_tie ? 'Tie!' :
+                pvpLastRound.i_won ? 'You win!' : 'Opponent wins!'
+              }
+              subMessage={
+                pvpLastRound.was_critical ? '⚡ Critical hit! +2 points' :
+                pvpLastRound.was_tie ? 'Same picker next round' :
+                undefined
+              }
+            />
+            {pvpLastRound.type_advantage && pvpLastRound.flavor_text && (
+              <div className="flex flex-col items-center gap-1 px-4 py-2 rounded-panel bg-bg-3 border border-line text-center">
+                <p className="font-mono text-chip text-lime uppercase tracking-widest">Type advantage!</p>
+                <p className="font-mono text-[11px] text-text-mute italic">{pvpLastRound.flavor_text}</p>
+              </div>
             )}
             <p className="font-mono text-chip text-text-mute">
               Stat: {pvpLastRound.stat_chosen.toUpperCase()}

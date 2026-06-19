@@ -15,6 +15,8 @@ export type RoundResult = {
   winner_id: number | null
   was_tie: boolean
   was_critical: boolean
+  type_advantage: boolean
+  flavor_text: string | null
   points_awarded: number
   xp: number
   coins: number
@@ -31,6 +33,7 @@ export type PvpRoundResult = {
   was_tie: boolean
   was_critical: boolean
   type_advantage: boolean
+  flavor_text: string | null
   points_awarded: number
   i_pick_next: boolean
 }

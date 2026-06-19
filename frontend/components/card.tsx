@@ -20,24 +20,28 @@ const RARITY_STYLES: Record<Rarity, { border: string; badge: string; text: strin
   legendary: { border: 'border-rarity-legendary', badge: 'bg-rarity-legendary', text: 'text-bg',       glow: '0 0 16px 4px rgba(255,181,71,0.45)',    tint: 'rgba(255,181,71,0.07)' },
 }
 
-const LANGUAGE_MASCOT: Record<string, string> = {
-  Python:     '🐍',
-  JavaScript: '⚡',
-  TypeScript: '🛡️',
-  Rust:       '🦀',
-  Go:         '🚀',
-  Java:       '☕',
-  Ruby:       '💎',
-  PHP:        '🐘',
-  'C++':      '⚙️',
-  'C#':       '🎼',
-  Swift:      '🦅',
-  Kotlin:     '🐉',
-  HTML:       '📜',
-  CSS:        '🎨',
-  Dart:       '🎯',
-  Lua:        '🌙',
-  Shell:      '🐚',
+type MascotInfo = { emoji: string; name: string }
+
+const LANGUAGE_MASCOT: Record<string, MascotInfo> = {
+  Python:        { emoji: '🐍', name: 'Slither Serpent' },
+  JavaScript:    { emoji: '⚡', name: 'Bolt Spirit' },
+  TypeScript:    { emoji: '🛡️', name: 'Shield Knight' },
+  Rust:          { emoji: '🦀', name: 'Iron Crab' },
+  Go:            { emoji: '🚀', name: 'Rocket Gopher' },
+  Java:          { emoji: '☕', name: 'Bean Golem' },
+  Ruby:          { emoji: '💎', name: 'Crystal Sprite' },
+  PHP:           { emoji: '🐘', name: 'Elder Elephant' },
+  'C++':         { emoji: '⚙️', name: 'Iron Mech' },
+  'C#':          { emoji: '🎼', name: 'Maestro Spirit' },
+  Swift:         { emoji: '🦅', name: 'Sky Hawk' },
+  Kotlin:        { emoji: '🐉', name: 'Code Dragon' },
+  HTML:          { emoji: '📜', name: 'Scroll Wizard' },
+  CSS:           { emoji: '🎨', name: 'Color Mage' },
+  Dart:          { emoji: '🎯', name: 'Bullseye Archer' },
+  Lua:           { emoji: '🌙', name: 'Moon Sprite' },
+  Shell:         { emoji: '🐚', name: 'Terminal Hermit' },
+  C:             { emoji: '🔩', name: 'Bit Specter' },
+  'Objective-C': { emoji: '🍎', name: 'Bracket Beast' },
 }
 
 function formatStat(value: number | null | undefined): string {
@@ -62,7 +66,9 @@ type CardProps = {
 export default function Card({ card, selected = false, onClick }: CardProps) {
   const rarity = (card.rarity as Rarity) ?? 'common'
   const style = RARITY_STYLES[rarity] ?? RARITY_STYLES.common
-  const mascot = card.language ? (LANGUAGE_MASCOT[card.language] ?? '📦') : '📦'
+  const mascot = card.language
+    ? (LANGUAGE_MASCOT[card.language] ?? { emoji: '📦', name: '' })
+    : { emoji: '📦', name: '' }
   const parts = card.repo_name?.split('/') ?? []
   const owner = parts[0] ?? 'unknown'
   const repo = parts[1] ?? parts[0] ?? 'unknown'
@@ -91,11 +97,18 @@ export default function Card({ card, selected = false, onClick }: CardProps) {
 
       {/* Language band */}
       {card.language && (
-        <div className={`mx-3 mb-2 rounded-badge px-2 py-1 flex items-center gap-1.5 ${style.badge}`}>
-          <span className="text-sm leading-none">{mascot}</span>
-          <span className={`font-mono text-chip font-bold uppercase tracking-wide ${style.text}`}>
-            {card.language}
-          </span>
+        <div className={`mx-3 mb-2 rounded-badge px-2 py-1 flex flex-col gap-0.5 ${style.badge}`}>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm leading-none">{mascot.emoji}</span>
+            <span className={`font-mono text-chip font-bold uppercase tracking-wide ${style.text}`}>
+              {card.language}
+            </span>
+          </div>
+          {mascot.name && (
+            <span className={`font-mono text-[9px] tracking-wide ${style.text} opacity-75`}>
+              {mascot.name}
+            </span>
+          )}
         </div>
       )}
 

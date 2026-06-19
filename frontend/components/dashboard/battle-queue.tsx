@@ -124,8 +124,13 @@ export default function BattleQueue({ selected, onRemove }: BattleQueueProps) {
 
       {/* Find a real opponent */}
       <button
-        onClick={() => router.push('/matchmaking')}
-        className="w-full py-3 rounded-cta border border-line font-display font-bold text-btn text-text-mute hover:border-cyan hover:text-cyan transition-colors"
+        onClick={() => canStart && router.push('/matchmaking')}
+        disabled={!canStart}
+        className={`w-full py-3 rounded-cta border font-display font-bold text-btn transition-colors ${
+          canStart
+            ? 'border-line text-text-mute hover:border-cyan hover:text-cyan cursor-pointer'
+            : 'border-line text-text-mute opacity-50 cursor-not-allowed'
+        }`}
       >
         ⚔ Find PvP Match
       </button>
